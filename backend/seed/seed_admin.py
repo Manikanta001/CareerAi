@@ -13,6 +13,7 @@ from app.utils.security import hash_password
 
 load_dotenv(ENV_PATH)
 
+#  hello
 
 def seed_admin() -> None:
     email = os.getenv("SEED_ADMIN_EMAIL", "admin@gmail.com").strip().lower()
