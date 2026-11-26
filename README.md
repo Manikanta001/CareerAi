@@ -68,13 +68,21 @@ For the frontend, `VITE_API_BASE_URL` defaults to `/api`, which works behind the
 
 ## Deploy the frontend to Vercel
 
-The repository includes [`vercel.json`](vercel.json) for deploying the Vite frontend from the repository root. The FastAPI backend must be deployed separately to a Python-capable host; Vercel should not use the local `http://localhost:8000` URL.
+The repository includes [`vercel.json`](vercel.json) and [`api/index.py`](api/index.py) for deploying both the Vite frontend and FastAPI backend from the repository root. Vercel's Python function filesystem is ephemeral; uploaded resumes are stored temporarily under `/tmp` and should be moved to durable object storage for production persistence.
 
 1. Import this repository into Vercel and keep the project root at the repository root.
-2. Add the Vercel environment variable `VITE_API_BASE_URL`, set to the public backend URL, for example `https://api.example.com/api`.
-3. On the backend host, set `FRONTEND_URL` to the exact Vercel origin, such as `https://careerai.vercel.app`.
-4. Set production `MONGODB_URI`, `DATABASE_NAME`, and a random `JWT_SECRET` of at least 32 characters on the backend host.
-5. Redeploy the Vercel project after setting `VITE_API_BASE_URL`; Vite injects this value during the build.
+2. Add these Vercel environment variables for Production, Preview, and Development:
+
+   - `MONGODB_URI`: your MongoDB Atlas connection string
+   - `DATABASE_NAME`: `careerai`
+   - `JWT_SECRET`: a random secret of at least 32 characters
+   - `JWT_ALGORITHM`: `HS256`
+   - `ACCESS_TOKEN_EXPIRE_MINUTES`: `60`
+   - `FRONTEND_URL`: your Vercel origin, such as `https://careerai.vercel.app`
+   - `ENVIRONMENT`: `production`
+   - `VITE_API_BASE_URL`: `/api`
+
+3. Redeploy the Vercel project after setting the variables; Vite injects `VITE_API_BASE_URL` during the build.
 
 The Vercel rewrite handles client-side routes such as `/login` and `/register`. API requests go directly to the configured backend URL, avoiding the browser `Network Error` caused by a deployed frontend trying to call localhost.
 

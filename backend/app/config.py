@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FRONTEND_URL: str = "http://localhost:5173"
-    UPLOAD_DIR: str = "uploads"
+    UPLOAD_DIR: str = "/tmp/careerai-uploads" if os.getenv("VERCEL") else "uploads"
     OPENAI_API_KEY: str = ""
     JUDGE0_URL: str = ""
     JUDGE0_API_KEY: str = ""
