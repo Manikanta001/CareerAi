@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { questionService } from '../../services/questionService';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ErrorMessage from '../../components/ErrorMessage';
 import { ListOrdered, Plus, Trash2 } from 'lucide-react';
 
 const AdminQuestions = () => {
@@ -17,14 +18,17 @@ const AdminQuestions = () => {
   const [opt3, setOpt3] = useState('');
   const [correct, setCorrect] = useState(0);
   const [explanation, setExplanation] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const fetchQuestions = async () => {
     try {
       setLoading(true);
       const res = await questionService.getQuestions();
-      setQuestions(res.data || []);
+      setQuestions(res || []);
     } catch (err) {
-      console.error(err);
+      setError(err.message || 'Could not load questions.');
     } finally {
       setLoading(false);
     }
@@ -36,16 +40,22 @@ const AdminQuestions = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!questionText || !opt0 || !opt1) return;
+    setError('');
+    setSuccess('');
+    if (![subject, topic, questionText, opt0, opt1, opt2, opt3].every((value) => value.trim())) {
+      setError('Enter the subject, topic, question, and all four answer options.');
+      return;
+    }
+    setSaving(true);
     try {
       await api.post('/admin/questions', {
         subject,
         topic,
         difficulty: 'Medium',
         question: questionText,
-        options: [opt0, opt1, opt2 || 'Option C', opt3 || 'Option D'],
-        correct_answer: parseInt(correct),
-        explanation: explanation || 'Standard concept explanation',
+        options: [opt0.trim(), opt1.trim(), opt2.trim(), opt3.trim()],
+        correct_answer: Number(correct),
+        explanation: explanation.trim(),
         marks: 1
       });
       setQuestionText('');
@@ -54,9 +64,12 @@ const AdminQuestions = () => {
       setOpt2('');
       setOpt3('');
       setExplanation('');
-      fetchQuestions();
+      await fetchQuestions();
+      setSuccess('Question added to the bank.');
     } catch (err) {
-      alert(err.message);
+      setError(err.message || 'Could not add this question.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -64,9 +77,9 @@ const AdminQuestions = () => {
     if (!window.confirm("Delete question from question bank?")) return;
     try {
       await api.delete(`/admin/questions/${id}`);
-      fetchQuestions();
+      await fetchQuestions();
     } catch (err) {
-      alert(err.message);
+      setError(err.message || 'Could not delete this question.');
     }
   };
 
@@ -80,12 +93,16 @@ const AdminQuestions = () => {
         </h1>
       </div>
 
+      {error && <ErrorMessage message={error} />}
+      {success && <p role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">{success}</p>}
+
       <form onSubmit={handleAdd} className="glass-panel p-6 rounded-3xl space-y-4">
         <h3 className="text-base font-bold text-white">Add New MCQ to Question Bank</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             type="text"
             required
+            aria-label="Subject"
             placeholder="Subject (e.g. DBMS)"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -94,6 +111,7 @@ const AdminQuestions = () => {
           <input
             type="text"
             required
+            aria-label="Topic"
             placeholder="Topic (e.g. SQL Joins)"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -104,6 +122,7 @@ const AdminQuestions = () => {
         <textarea
           rows={2}
           required
+          aria-label="Question"
           placeholder="Question Statement..."
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}
@@ -111,15 +130,17 @@ const AdminQuestions = () => {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <input type="text" placeholder="Option A" value={opt0} onChange={(e) => setOpt0(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
-          <input type="text" placeholder="Option B" value={opt1} onChange={(e) => setOpt1(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
-          <input type="text" placeholder="Option C" value={opt2} onChange={(e) => setOpt2(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
-          <input type="text" placeholder="Option D" value={opt3} onChange={(e) => setOpt3(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
+          <input type="text" required aria-label="Option A" placeholder="Option A" value={opt0} onChange={(e) => setOpt0(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
+          <input type="text" required aria-label="Option B" placeholder="Option B" value={opt1} onChange={(e) => setOpt1(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
+          <input type="text" required aria-label="Option C" placeholder="Option C" value={opt2} onChange={(e) => setOpt2(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
+          <input type="text" required aria-label="Option D" placeholder="Option D" value={opt3} onChange={(e) => setOpt3(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white" />
         </div>
 
+        <textarea rows={2} aria-label="Answer explanation (optional)" placeholder="Explanation (optional)" value={explanation} onChange={(e) => setExplanation(e.target.value)} className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-xs text-white focus:border-brand-500 focus:outline-none" />
+
         <div>
-          <label className="text-xs text-slate-300 mr-3">Correct Option Index (0 = A, 1 = B, 2 = C, 3 = D):</label>
-          <select value={correct} onChange={(e) => setCorrect(e.target.value)} className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white">
+          <label htmlFor="question-correct" className="text-xs text-slate-300 mr-3">Correct answer:</label>
+          <select id="question-correct" value={correct} onChange={(e) => setCorrect(e.target.value)} className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white">
             <option value={0}>Option A (0)</option>
             <option value={1}>Option B (1)</option>
             <option value={2}>Option C (2)</option>
@@ -129,9 +150,10 @@ const AdminQuestions = () => {
 
         <button
           type="submit"
+          disabled={saving}
           className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-600/20 flex items-center gap-1.5"
         >
-          <Plus className="h-4 w-4" /> Add Question
+          <Plus className="h-4 w-4" /> {saving ? 'Saving…' : 'Add Question'}
         </button>
       </form>
 
@@ -143,6 +165,8 @@ const AdminQuestions = () => {
               <h4 className="text-sm font-bold text-white">{q.question}</h4>
             </div>
             <button
+              type="button"
+              aria-label={`Delete ${q.question}`}
               onClick={() => handleDelete(q.id)}
               className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10"
             >
@@ -150,6 +174,7 @@ const AdminQuestions = () => {
             </button>
           </div>
         ))}
+        {!questions.length && !error && <p className="rounded-2xl border border-dashed border-slate-700 p-6 text-center text-sm text-slate-400">No questions have been added yet.</p>}
       </div>
     </div>
   );

@@ -24,5 +24,10 @@ export const performanceService = {
   async askAssistant(message) {
     const res = await api.post('/assistant/chat', { message });
     return res.data;
+  },
+
+  async runCode(payload) {
+    const res = await api.post('/coding/run', payload);
+    return res.data;
   }
 };

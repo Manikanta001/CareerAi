@@ -19,30 +19,36 @@ def get_profile(current_user: dict = Depends(get_current_user)):
             del profile["_id"]
             return success_response(profile, "Profile retrieved")
 
-    # Default profile fallback
+    # A newly registered user may not have completed onboarding yet. Return an
+    # empty profile rather than inventing education, skills, or experience.
     default_profile = {
         "user_id": user_id,
-        "name": current_user.get("name", "Student User"),
-        "email": current_user.get("email", "user@careerai.com"),
-        "phone": "+91 9876543210",
-        "location": "Bengaluru, India",
-        "education": "B.Tech in Computer Science and Engineering",
-        "degree": "B.Tech",
-        "college": "National Institute of Technology",
-        "graduation_year": 2026,
-        "cgpa": 8.4,
-        "technical_skills": ["C", "C++", "Java", "Python", "SQL", "Git", "FastAPI", "React", "MongoDB"],
-        "soft_skills": ["Problem Solving", "Team Leadership", "Communication"],
-        "certifications": ["AWS Certified Cloud Practitioner", "NPTEL Data Structures"],
-        "projects": [
-            {"title": "CareerAI Placement Platform", "tech": "FastAPI, React, MongoDB", "desc": "AI driven career intelligence software."}
-        ],
-        "experience": [
-            {"role": "Software Development Intern", "company": "TechStart Inc", "duration": "3 months"}
-        ],
+        "name": current_user.get("name", ""),
+        "email": current_user.get("email", ""),
+        "phone": "",
+        "location": "",
+        "education": "",
+        "degree": "",
+        "college": "",
+        "graduation_year": None,
+        "cgpa": None,
+        "technical_skills": [],
+        "soft_skills": [],
+        "certifications": [],
+        "projects": [],
+        "experience": [],
         "preferred_career": "Software Developer",
-        "preferred_job_type": "Full Time",
-        "preferred_location": "Bengaluru / Remote"
+        "preferred_job_type": "",
+        "preferred_location": "",
+        "education_level": "",
+        "specialization": "",
+        "current_year": "",
+        "programming_languages": [],
+        "career_interests": [],
+        "target_job_role": "",
+        "experience_level": "",
+        "learning_goals": [],
+        "profile_picture": ""
     }
     return success_response(default_profile, "Profile retrieved")
 

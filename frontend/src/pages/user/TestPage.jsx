@@ -16,31 +16,46 @@ const TestPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [markedForReview, setMarkedForReview] = useState({});
-  const [startTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchTestData = async () => {
-      try {
-        setLoading(true);
-        const res = await testService.getTestDetails(testId);
-        setTest(res.data);
-        setQuestions(res.data?.questions || []);
-      } catch (err) {
-        setError(err.message || 'Failed to load test payload');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTestData();
-  }, [testId]);
+  const fetchTestData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await testService.getTestDetails(testId);
+      setTest(res);
+      setQuestions(res?.questions || []);
+      setUserAnswers({});
+      setMarkedForReview({});
+      setCurrentIndex(0);
+      setStartTime(Date.now());
+    } catch (err) {
+      setError(err.message || 'Failed to load test payload');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchTestData(); }, [testId]);
 
   const handleSelectOption = (optIndex) => {
     const qid = questions[currentIndex]?.id;
     if (qid) {
       setUserAnswers(prev => ({ ...prev, [qid]: optIndex }));
+    }
+  };
+
+  const handleClearAnswer = () => {
+    const qid = questions[currentIndex]?.id;
+    if (qid) {
+      setUserAnswers(prev => {
+        const next = { ...prev };
+        delete next[qid];
+        return next;
+      });
     }
   };
 
@@ -51,11 +66,16 @@ const TestPage = () => {
   const handleSubmitTest = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setError('');
 
-    const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+    const durationSeconds = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
     try {
-      const res = await testService.submitTest(testId, userAnswers, durationSeconds);
-      navigate('/test-result', { state: { result: res.data } });
+      const fullAnswers = {};
+      questions.forEach(q => {
+        fullAnswers[q.id] = userAnswers[q.id] !== undefined ? userAnswers[q.id] : -1;
+      });
+      const res = await testService.submitTest(testId, fullAnswers, durationSeconds);
+      navigate('/test-result', { state: { result: res } });
     } catch (err) {
       setError(err.message || 'Failed to submit test');
       setSubmitting(false);
@@ -63,7 +83,8 @@ const TestPage = () => {
   };
 
   if (loading) return <LoadingSpinner message="Initializing placement test environment & timer..." />;
-  if (error) return <ErrorMessage message={error} />;
+  if (error) return <ErrorMessage message={error} onRetry={test ? handleSubmitTest : fetchTestData} />;
+  if (!questions.length) return <ErrorMessage message="This test has no questions available." />;
 
   const currentQ = questions[currentIndex];
   const durationInSeconds = (test?.duration_minutes || 60) * 60;
@@ -80,6 +101,7 @@ const TestPage = () => {
         <div className="flex items-center gap-4">
           <Timer initialSeconds={durationInSeconds} onExpire={handleSubmitTest} />
           <button
+            type="button"
             onClick={handleSubmitTest}
             disabled={submitting}
             className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all"
@@ -103,6 +125,7 @@ const TestPage = () => {
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 disabled={currentIndex === 0}
                 onClick={() => setCurrentIndex(prev => prev - 1)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-50"
@@ -110,6 +133,7 @@ const TestPage = () => {
                 Previous
               </button>
               <button
+                type="button"
                 onClick={toggleMarkForReview}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-colors ${
                   markedForReview[currentIndex]
@@ -119,9 +143,19 @@ const TestPage = () => {
               >
                 <Bookmark className="h-3.5 w-3.5" /> {markedForReview[currentIndex] ? 'Marked' : 'Mark for Review'}
               </button>
+              {currentQ && userAnswers[currentQ.id] !== undefined && (
+                <button
+                  type="button"
+                  onClick={handleClearAnswer}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors"
+                >
+                  Clear Choice
+                </button>
+              )}
             </div>
 
             <button
+              type="button"
               disabled={currentIndex === questions.length - 1}
               onClick={() => setCurrentIndex(prev => prev + 1)}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white border border-brand-500 disabled:opacity-50"
@@ -149,6 +183,8 @@ const TestPage = () => {
               return (
                 <button
                   key={idx}
+                  type="button"
+                  aria-label={`Go to question ${idx + 1}${isAnswered ? ', answered' : ''}${isMarked ? ', marked for review' : ''}`}
                   onClick={() => setCurrentIndex(idx)}
                   className={`h-9 rounded-xl border text-xs font-mono transition-all flex items-center justify-center ${btnBg}`}
                 >

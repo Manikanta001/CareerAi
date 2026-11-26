@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Award, FileText, Target, CheckCircle, ArrowRight, Shield, Zap, TrendingUp } from 'lucide-react';
+import { Sparkles, FileText, Target, ArrowRight, TrendingUp } from 'lucide-react';
 
 const Home = () => {
   return (
@@ -16,7 +16,7 @@ const Home = () => {
         </h1>
 
         <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-          Analyze your skills, discover the right career, close your skill gaps, and prepare for campus placement tests with personalized learning, timed mock assessments, and AI analytics.
+          Analyze your resume and profile, compare skills with career paths, close skill gaps, and prepare for campus placements with structured learning and timed assessments.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -30,20 +30,10 @@ const Home = () => {
             to="/login"
             className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-base transition-colors"
           >
-            Explore Demo Account
+            Sign In
           </Link>
         </div>
 
-        {/* Demo Credentials Box */}
-        <div className="mt-8 p-4 rounded-2xl glass-panel max-w-md mx-auto text-left text-xs border border-slate-800 space-y-2">
-          <div className="font-bold text-brand-400 uppercase tracking-wider">Demo Credentials</div>
-          <div className="grid grid-cols-2 gap-2 text-slate-300">
-            <div><span className="text-slate-400">Student:</span> user@careerai.com</div>
-            <div><span className="text-slate-400">Pass:</span> User@123</div>
-            <div><span className="text-slate-400">Admin:</span> admin@careerai.com</div>
-            <div><span className="text-slate-400">Pass:</span> Admin@123</div>
-          </div>
-        </div>
       </section>
 
       {/* Feature Cards Grid */}
@@ -52,7 +42,7 @@ const Home = () => {
           <div className="h-12 w-12 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400">
             <FileText className="h-6 w-6" />
           </div>
-          <h3 className="text-xl font-bold text-white">AI Resume Analyzer</h3>
+          <h3 className="text-xl font-bold text-white">Resume Analyzer</h3>
           <p className="text-sm text-slate-400 leading-relaxed">
             Upload PDF/DOCX resumes. Get a 7-section breakdown score with NLP skill extraction and targeted improvement feedback.
           </p>

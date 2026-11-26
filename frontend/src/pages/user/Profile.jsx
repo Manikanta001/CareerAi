@@ -20,7 +20,7 @@ const Profile = () => {
       try {
         setLoading(true);
         const res = await authService.getProfile();
-        setProfile(res.data);
+        setProfile(res);
       } catch (err) {
         setError(err.message || 'Failed to load profile');
       } finally {
@@ -98,17 +98,20 @@ const Profile = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300">Full Name</label>
+              <label htmlFor="profile-name" className="text-xs font-semibold text-slate-300">Full Name</label>
               <input
+                id="profile-name"
                 type="text"
                 value={profile?.name || ''}
                 onChange={(e) => handleChange('name', e.target.value)}
+                required
                 className="w-full mt-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-500"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">Email Address (Read-only)</label>
+              <label htmlFor="profile-email" className="text-xs font-semibold text-slate-300">Email Address (Read-only)</label>
               <input
+                id="profile-email"
                 type="email"
                 disabled
                 value={profile?.email || ''}
@@ -116,8 +119,9 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">Phone Number</label>
+              <label htmlFor="profile-phone" className="text-xs font-semibold text-slate-300">Phone Number</label>
               <input
+                id="profile-phone"
                 type="text"
                 value={profile?.phone || ''}
                 onChange={(e) => handleChange('phone', e.target.value)}
@@ -125,8 +129,9 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">Location</label>
+              <label htmlFor="profile-location" className="text-xs font-semibold text-slate-300">Location</label>
               <input
+                id="profile-location"
                 type="text"
                 value={profile?.location || ''}
                 onChange={(e) => handleChange('location', e.target.value)}
@@ -144,8 +149,9 @@ const Profile = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300">Degree & Branch</label>
+              <label htmlFor="profile-education" className="text-xs font-semibold text-slate-300">Degree & Branch</label>
               <input
+                id="profile-education"
                 type="text"
                 value={profile?.education || ''}
                 onChange={(e) => handleChange('education', e.target.value)}
@@ -153,8 +159,9 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">College / University</label>
+              <label htmlFor="profile-college" className="text-xs font-semibold text-slate-300">College / University</label>
               <input
+                id="profile-college"
                 type="text"
                 value={profile?.college || ''}
                 onChange={(e) => handleChange('college', e.target.value)}
@@ -162,21 +169,27 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">Graduation Year</label>
+              <label htmlFor="profile-graduation-year" className="text-xs font-semibold text-slate-300">Graduation Year</label>
               <input
+                id="profile-graduation-year"
                 type="number"
-                value={profile?.graduation_year || 2026}
-                onChange={(e) => handleChange('graduation_year', parseInt(e.target.value))}
+                value={profile?.graduation_year ?? ''}
+                onChange={(e) => handleChange('graduation_year', e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                min="1950"
+                max={new Date().getFullYear() + 8}
                 className="w-full mt-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-500"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300">CGPA / Percentage</label>
+              <label htmlFor="profile-cgpa" className="text-xs font-semibold text-slate-300">CGPA / Percentage</label>
               <input
+                id="profile-cgpa"
                 type="number"
                 step="0.1"
-                value={profile?.cgpa || 8.0}
-                onChange={(e) => handleChange('cgpa', parseFloat(e.target.value))}
+                value={profile?.cgpa ?? ''}
+                onChange={(e) => handleChange('cgpa', e.target.value === '' ? null : parseFloat(e.target.value))}
+                min="0"
+                max="100"
                 className="w-full mt-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-500"
               />
             </div>
@@ -190,9 +203,10 @@ const Profile = () => {
           </h3>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300">Add Technical Skill</label>
+            <label htmlFor="profile-new-skill" className="text-xs font-semibold text-slate-300">Add Technical Skill</label>
             <div className="flex gap-2 mt-1">
               <input
+                id="profile-new-skill"
                 type="text"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
@@ -218,8 +232,9 @@ const Profile = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300">Target Career Role</label>
+              <label htmlFor="profile-career" className="text-xs font-semibold text-slate-300">Target Career Role</label>
               <select
+                id="profile-career"
                 value={profile?.preferred_career || 'Software Developer'}
                 onChange={(e) => handleChange('preferred_career', e.target.value)}
                 className="w-full mt-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-500"

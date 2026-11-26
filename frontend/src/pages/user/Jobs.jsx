@@ -4,6 +4,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import ErrorMessage from '../../components/ErrorMessage';
 import SkillBadge from '../../components/SkillBadge';
 import { Briefcase, MapPin, Building2, ExternalLink } from 'lucide-react';
+import { getSafeExternalUrl } from '../../utils/helpers';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -15,7 +16,7 @@ const Jobs = () => {
       try {
         setLoading(true);
         const res = await jobService.getRecommendedJobs();
-        setJobs(res.data || []);
+        setJobs(res || []);
       } catch (err) {
         setError(err.message || 'Failed to load matching jobs');
       } finally {
@@ -34,7 +35,7 @@ const Jobs = () => {
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <Briefcase className="h-6 w-6 text-brand-400" /> Placement Job Matcher
         </h1>
-        <p className="text-xs text-slate-400">Sample job database matched with your verified technical skills</p>
+        <p className="text-xs text-slate-400">Compare each role’s listed requirements with the skills in your profile.</p>
       </div>
 
       <div className="space-y-6">
@@ -43,6 +44,7 @@ const Jobs = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-white">{job.title}</h3>
+                {job.is_sample && <span className="mt-1 inline-flex rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-200">Sample role · not a live vacancy</span>}
                 <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
                   <span className="flex items-center gap-1 font-semibold text-slate-300">
                     <Building2 className="h-3.5 w-3.5 text-brand-400" /> {job.company}
@@ -58,16 +60,22 @@ const Jobs = () => {
 
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-sm">
-                  {job.match_percentage || 85}% Match
+                  {job.match_percentage == null ? 'Not assessed' : `${job.match_percentage}% Match`}
                 </span>
-                <a
-                  href={job.application_url || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5"
-                >
-                  Apply <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                {getSafeExternalUrl(job.application_url) ? (
+                  <a
+                    href={getSafeExternalUrl(job.application_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5"
+                  >
+                    Visit application <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <span className="px-4 py-2 rounded-xl bg-slate-800 text-slate-500 font-semibold text-xs border border-slate-700">
+                    Application link unavailable
+                  </span>
+                )}
               </div>
             </div>
 

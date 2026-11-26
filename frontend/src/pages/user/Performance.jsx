@@ -17,7 +17,7 @@ const Performance = () => {
       try {
         setLoading(true);
         const res = await performanceService.getPerformance();
-        setPerf(res.data);
+        setPerf(res);
       } catch (err) {
         setError(err.message || 'Failed to load performance analytics');
       } finally {
@@ -40,16 +40,16 @@ const Performance = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard title="Placement Readiness" value={`${perf?.career_readiness_score}%`} subtitle="Combined weighted score" icon={Award} color="emerald" />
-        <StatCard title="Overall Accuracy" value={`${perf?.overall_accuracy}%`} subtitle="Across all attempted questions" icon={TrendingUp} color="brand" />
-        <StatCard title="Mock Tests Attempted" value={perf?.total_tests_taken || 3} subtitle="Submitted mock sessions" icon={LineChart} color="indigo" />
+        <StatCard title="Placement Readiness" value={perf?.career_readiness_score == null ? 'Not assessed' : `${perf.career_readiness_score}%`} subtitle="Combined weighted score" icon={Award} color="emerald" />
+        <StatCard title="Overall Accuracy" value={perf?.overall_accuracy == null ? 'Not assessed' : `${perf.overall_accuracy}%`} subtitle="Across all attempted questions" icon={TrendingUp} color="brand" />
+        <StatCard title="Mock Tests Attempted" value={perf?.total_tests_taken == null ? '—' : perf.total_tests_taken} subtitle="Submitted mock sessions" icon={LineChart} color="indigo" />
       </div>
 
       {/* Score Trend Chart */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl space-y-4">
         <h3 className="text-lg font-bold text-white">Placement Readiness Progress Trend</h3>
         <div className="h-72 w-full pt-4">
-          <ResponsiveContainer width="100%" height="100%">
+          {perf?.score_trend?.length ? <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={perf?.score_trend || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
               <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -57,7 +57,7 @@ const Performance = () => {
               <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} />
               <Area type="monotone" dataKey="score" stroke="#10b981" strokeWidth={3} fill="#10b98120" />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveContainer> : <div className="grid h-full place-items-center rounded-xl border border-dashed border-slate-700 text-center text-xs text-slate-400">Submit a mock test to build your score trend.</div>}
         </div>
       </div>
 
@@ -65,9 +65,10 @@ const Performance = () => {
       <div className="glass-panel p-6 rounded-3xl space-y-4">
         <h3 className="text-base font-bold text-white">Subject Mastery Level</h3>
         <div className="space-y-3">
-          {Object.entries(perf?.subject_performance || {}).map(([subj, pct], idx) => (
+            {Object.entries(perf?.subject_performance || {}).map(([subj, pct], idx) => (
             <ProgressBar key={idx} label={subj} value={pct} color={pct >= 70 ? 'emerald' : 'amber'} />
           ))}
+            {!Object.keys(perf?.subject_performance || {}).length && <p className="text-sm text-slate-400">Subject breakdowns appear after you submit a mock test.</p>}
         </div>
       </div>
     </div>

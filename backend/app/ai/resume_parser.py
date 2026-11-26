@@ -22,27 +22,53 @@ def extract_text_from_docx(file_path: str) -> str:
     try:
         import docx
         doc = docx.Document(file_path)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
+        parts = [para.text for para in doc.paragraphs if para.text.strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    parts.append(" | ".join(cells))
+        text = "\n".join(parts)
     except Exception as e:
         logger.error(f"Error reading DOCX {file_path}: {e}")
     return text
 
 def clean_text(text: str) -> str:
-    text = re.sub(r'\s+', ' ', text)
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
+
+_SECTION_HEADINGS = {
+    "education": re.compile(r"^(education|academic background|qualifications?)(\s*[:\-].*)?$", re.I),
+    "skills": re.compile(r"^(technical skills|skills|technologies|tech stack)(\s*[:\-].*)?$", re.I),
+    "projects": re.compile(r"^(academic projects|personal projects|projects)(\s*[:\-].*)?$", re.I),
+    "experience": re.compile(r"^(work experience|professional experience|experience|employment|internships?)(\s*[:\-].*)?$", re.I),
+    "certifications": re.compile(r"^(certifications?|courses|licenses)(\s*[:\-].*)?$", re.I),
+    "achievements": re.compile(r"^(achievements?|awards?|honors?|leadership|extracurricular activities|volunteer experience)(\s*[:\-].*)?$", re.I),
+}
+
+
+def _section_heading(line: str):
+    candidate = line.strip().strip("#* ")
+    for key, pattern in _SECTION_HEADINGS.items():
+        match = pattern.match(candidate)
+        if match:
+            remainder = re.sub(r"^\s*[:\-]\s*", "", match.group(2) or "").strip()
+            return key, remainder
+    return None, ""
+
 def parse_resume_sections(raw_text: str) -> Dict[str, Any]:
-    text_lower = raw_text.lower()
-    
-    # Section keywords
     sections = {
         "contact": False,
         "education": [],
         "skills": [],
         "projects": [],
         "experience": [],
-        "certifications": []
+        "certifications": [],
+        "achievements": []
     }
 
     # Contact info detection
@@ -51,24 +77,21 @@ def parse_resume_sections(raw_text: str) -> Dict[str, Any]:
     if email_match or phone_match:
         sections["contact"] = True
 
-    # Education detection
-    edu_keywords = ["education", "b.tech", "b.e", "degree", "university", "college", "cgpa", "percentage", "bachelor", "master"]
-    if any(k in text_lower for k in edu_keywords):
-        sections["education"].append("Found education section/credentials")
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    active_section = None
+    for line in lines:
+        heading, inline_content = _section_heading(line)
+        if heading:
+            active_section = heading
+            if inline_content and len(sections[active_section]) < 8:
+                sections[active_section].append(inline_content[:300])
+            continue
+        if active_section:
+            # Keep only verbatim resume lines and cap output for a concise report.
+            if len(sections[active_section]) < 8:
+                sections[active_section].append(line[:300])
 
-    # Project keywords
-    proj_keywords = ["project", "developed", "built", "implemented", "github", "system", "application"]
-    if any(k in text_lower for k in proj_keywords):
-        sections["projects"].append("Found project highlights")
-
-    # Experience keywords
-    exp_keywords = ["experience", "intern", "internship", "employment", "company", "role", "work"]
-    if any(k in text_lower for k in exp_keywords):
-        sections["experience"].append("Found work/internship experience")
-
-    # Certification keywords
-    cert_keywords = ["certificate", "certification", "certified", "course", "nptel", "coursera", "udemy"]
-    if any(k in text_lower for k in cert_keywords):
-        sections["certifications"].append("Found certifications")
+    # A heading with no following text should not count as a populated section.
+    # This also keeps the report honest when a resume could not be parsed well.
 
     return sections

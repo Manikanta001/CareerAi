@@ -1,155 +1,131 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { FileText, Loader2, Upload } from 'lucide-react';
 import { resumeService } from '../../services/resumeService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ErrorMessage from '../../components/ErrorMessage';
-import SkillBadge from '../../components/SkillBadge';
-import { Upload, FileText, CheckCircle2, AlertTriangle, Sparkles, ArrowRight } from 'lucide-react';
+import ResumeLearningReport from '../../components/ResumeLearningReport';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const ResumeAnalyzer = () => {
   const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
   const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchLatest = async () => {
-      try {
-        setInitialLoading(true);
-        const res = await resumeService.getLatestAnalysis();
-        setAnalysis(res.data);
-      } catch (err) {
-        // ignorable fallback
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-    fetchLatest();
+    let active = true;
+    Promise.all([resumeService.getLatestAnalysis(), resumeService.getOnboardingReport()])
+      .then(([analysisResult, reportResult]) => {
+        if (!active) return;
+        if (analysisResult?.overall_score != null) setAnalysis(analysisResult);
+        if (reportResult?.has_resume) setReport(reportResult);
+      })
+      .catch((err) => active && setError(err.message || 'Could not load your saved resume analysis.'))
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
   }, []);
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-    setLoading(true);
+  const handleUpload = async (event) => {
+    event.preventDefault();
     setError('');
+    if (!file) return;
+    if (!/\.(pdf|docx)$/i.test(file.name)) {
+      setError('Upload a PDF or DOCX file.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Your resume must be 10 MB or smaller.');
+      return;
+    }
 
+    const previousReport = report;
+    let resumeWasSaved = false;
+    setUploading(true);
+    setReport(null);
     try {
-      const res = await resumeService.uploadResume(file);
-      setAnalysis(res.data?.analysis);
+      const uploaded = await resumeService.uploadResume(file);
+      if (!uploaded?.analysis || typeof uploaded.analysis.overall_score !== 'number') {
+        throw new Error('The resume could not be analyzed. Try a text-based PDF or DOCX.');
+      }
+      resumeWasSaved = true;
+      setAnalysis(uploaded.analysis);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      const nextReport = await resumeService.getOnboardingReport();
+      if (!nextReport?.has_resume) throw new Error('Resume analysis completed, but the learning report was not available. Please retry.');
+      setReport(nextReport);
     } catch (err) {
-      setError(err.message || 'Failed to upload and parse resume');
+      if (!resumeWasSaved) setReport(previousReport);
+      setError(err.message || 'Resume analysis failed. Please try again.');
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
-  if (initialLoading) return <LoadingSpinner message="Fetching resume analysis..." />;
+  if (loading) return <LoadingSpinner message="Loading your saved resume analysis…" />;
 
-  const overallScore = analysis?.overall_score || 78;
+  const sectionScores = Object.entries(analysis?.section_scores || {}).map(([name, value]) => {
+    const [score, max] = String(value).split('/').map(Number);
+    const points = Number.isFinite(score) ? score : 0;
+    const maximum = Number.isFinite(max) ? max : 0;
+    return { name: name.replace('Overall ', ''), score: maximum ? (points / maximum) * 100 : 0, points, max: maximum };
+  });
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="border-b border-slate-800 pb-4">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText className="h-6 w-6 text-brand-400" /> AI Resume Analyzer & Scorer
-        </h1>
-        <p className="text-xs text-slate-400">Upload your PDF/DOCX resume for automated NLP skill extraction & 7-point evaluation</p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-7">
+      <header className="border-b border-slate-800 pb-4">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-white"><FileText className="h-6 w-6 text-brand-400" /> Resume & Learning Plan</h1>
+        <p className="mt-1 text-sm text-slate-400">Upload a PDF or DOCX (up to 10 MB) to refresh the skills and study recommendations detected from your resume.</p>
+      </header>
 
       {error && <ErrorMessage message={error} />}
 
-      {/* File Upload Panel */}
-      <div className="glass-panel p-8 rounded-3xl border border-slate-800 text-center space-y-4">
-        <form onSubmit={handleUpload} className="space-y-4">
-          <div className="border-2 border-dashed border-slate-800 hover:border-brand-500/50 rounded-2xl p-8 bg-slate-900/40 transition-all">
-            <Upload className="h-10 w-10 text-brand-400 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-200">
-              Drag & drop your resume file or <span className="text-brand-400 underline cursor-pointer">browse</span>
-            </p>
-            <p className="text-xs text-slate-400 mt-1">Supports PDF, DOCX (Max size 10MB)</p>
-            <input
-              type="file"
-              accept=".pdf,.docx"
-              onChange={handleFileChange}
-              className="mt-4 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={!file || loading}
-            className={`px-8 py-3 rounded-xl font-bold text-sm shadow-lg transition-all ${
-              file && !loading
-                ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/20'
-                : 'bg-slate-800 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            {loading ? 'Analyzing with PyMuPDF & spaCy NLP...' : 'Analyze Resume Now'}
-          </button>
-        </form>
-      </div>
-
-      {/* Analysis Results Display */}
-      {analysis && (
-        <div className="space-y-8">
-          {/* Top Score Banner */}
-          <div className="glass-panel p-8 rounded-3xl border border-brand-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Analysis Breakdown</span>
-              <h2 className="text-2xl font-extrabold text-white">Overall Resume Score: {overallScore}/100</h2>
-              <p className="text-xs text-slate-400">Calculated across 7 standard placement criteria</p>
-            </div>
-
-            <div className="h-28 w-28 rounded-full bg-slate-900 border-4 border-brand-500 flex items-center justify-center text-3xl font-extrabold text-white shadow-lg shadow-brand-500/20">
-              {overallScore}
-            </div>
-          </div>
-
-          {/* Section Breakdown Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {Object.entries(analysis.section_scores || {}).map(([sec, val], idx) => (
-              <div key={idx} className="glass-panel p-4 rounded-2xl flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300">{sec}</span>
-                <span className="px-2.5 py-1 rounded bg-brand-500/10 border border-brand-500/30 text-brand-300 font-mono font-bold text-xs">
-                  {val}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Extracted Skills */}
-          <div className="glass-panel p-6 rounded-2xl space-y-3">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-300">
-              Extracted Technical Skills ({analysis.extracted_skills?.length || 0})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {analysis.extracted_skills?.map((s, idx) => (
-                <SkillBadge key={idx} skill={s} status="Strong" />
-              ))}
-            </div>
-          </div>
-
-          {/* Actionable Improvement Suggestions */}
-          <div className="glass-panel p-6 rounded-2xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" /> Improvement Recommendations
-            </h3>
-            <div className="space-y-2.5">
-              {analysis.suggestions?.map((sug, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-3 text-xs text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
-                  <span>{sug}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <form onSubmit={handleUpload} className="glass-panel flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <label htmlFor="resume-refresh" className="block text-sm font-semibold text-white">{file?.name || 'Choose a resume file'}</label>
+          <p className="mt-1 text-xs text-slate-400">The report updates only after the file is successfully analyzed.</p>
+          <input ref={fileInputRef} id="resume-refresh" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => { setFile(event.target.files?.[0] || null); setError(''); }} className="mt-3 block max-w-full text-xs text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white" />
         </div>
+        <button type="submit" disabled={!file || uploading} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-50">
+          {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing…</> : <><Upload className="h-4 w-4" /> Analyze resume</>}
+        </button>
+      </form>
+
+      {analysis && (
+        <div className="glass-panel rounded-2xl p-5 space-y-5">
+          <div>
+            <p className="text-sm font-semibold text-white">Resume content score: {analysis.overall_score}/100</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{analysis.score_basis || 'A text-based estimate of resume structure and detected keywords. It does not measure skill proficiency or guarantee recruiter outcomes.'}</p>
+            {analysis.word_count != null && <p className="mt-1 text-[11px] text-slate-400">Scored from {analysis.word_count.toLocaleString()} words extracted from your file.</p>}
+            {analysis.word_count != null && analysis.word_count < 120 && <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs leading-5 text-amber-900">We extracted very little text. If this score looks too low, upload a text-based PDF or DOCX; scanned image resumes may need OCR before they can be assessed accurately.</p>}
+          </div>
+          {sectionScores.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-sm font-semibold text-white">Score by resume section</h2>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={sectionScores} layout="vertical" margin={{ top: 4, right: 12, left: 12, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} stroke="#64748b" tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" width={120} stroke="#64748b" tick={{ fontSize: 11 }} />
+                    <Tooltip
+                      formatter={(value, _label, item) => [`${item.payload.points}/${item.payload.max} (${Math.round(value)}%)`, 'Score']}
+                      contentStyle={{ backgroundColor: '#ffffff', color: '#172033', borderColor: '#cbd5e1', borderRadius: '12px' }}
+                    />
+                    <Bar dataKey="score" fill="#2563eb" radius={[0, 5, 5, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {report ? <ResumeLearningReport report={report} /> : !analysis && !error && (
+        <div className="glass-panel rounded-2xl p-6 text-sm text-slate-300">No resume analysis is saved yet. Upload a resume to see skills detected and topics to study.</div>
       )}
     </div>
   );

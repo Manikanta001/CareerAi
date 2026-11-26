@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { questionService } from '../../services/questionService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ErrorMessage from '../../components/ErrorMessage';
-import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, HelpCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, HelpCircle } from 'lucide-react';
 
 const Lesson = () => {
   const { lessonId } = useParams();
+  const [searchParams] = useSearchParams();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,8 +16,9 @@ const Lesson = () => {
     const fetchLesson = async () => {
       try {
         setLoading(true);
-        const res = await questionService.getLesson(lessonId || 'les1');
-        setLesson(res.data);
+        setError('');
+        const res = await questionService.getLesson(lessonId || 'les1', searchParams.get('topic_id'), searchParams.get('topic_title'));
+        setLesson(res);
       } catch (err) {
         setError(err.message || 'Failed to load lesson content');
       } finally {
@@ -24,7 +26,7 @@ const Lesson = () => {
       }
     };
     fetchLesson();
-  }, [lessonId]);
+  }, [lessonId, searchParams]);
 
   if (loading) return <LoadingSpinner message="Loading interactive lesson content..." />;
   if (error) return <ErrorMessage message={error} />;
@@ -32,7 +34,8 @@ const Lesson = () => {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="border-b border-slate-800 pb-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
+        {lesson?.is_sample && <span className="inline-block mb-2 rounded-full bg-amber-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300">Starter lesson outline</span>}
+        <span className="block text-xs font-bold uppercase tracking-wider text-brand-400">
           {lesson?.subject} • {lesson?.topic}
         </span>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">{lesson?.title}</h1>
@@ -44,6 +47,19 @@ const Lesson = () => {
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Concept Explanation</h3>
           <p className="text-sm text-slate-200 leading-relaxed">{lesson?.explanation}</p>
         </div>
+
+        {lesson?.examples?.length > 0 && <section>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Examples to work through</h3>
+          <ul className="space-y-2">{lesson.examples.map((item, idx) => <li key={idx} className="rounded-xl bg-slate-900/60 p-3 text-sm text-slate-200">{item}</li>)}</ul>
+        </section>}
+        {lesson?.formulas?.length > 0 && <section>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Formulas</h3>
+          <ul className="space-y-2">{lesson.formulas.map((item, idx) => <li key={idx} className="rounded-xl bg-slate-900/60 p-3 text-sm text-slate-200">{item}</li>)}</ul>
+        </section>}
+        {lesson?.practice_questions?.length > 0 && <section>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Try it yourself</h3>
+          <ul className="list-decimal list-inside space-y-2 text-sm text-slate-200">{lesson.practice_questions.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
+        </section>}
 
         {/* Key Concepts List */}
         <div>
@@ -74,7 +90,7 @@ const Lesson = () => {
 
         <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
           <Link
-            to="/mcq-practice"
+            to={`/mcq-practice?topic=${encodeURIComponent(lesson?.topic || '')}`}
             className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg shadow-brand-600/20 transition-all flex items-center gap-2"
           >
             <HelpCircle className="h-4 w-4" /> Practice Topic MCQs

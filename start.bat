@@ -3,7 +3,11 @@ echo ========================================================
 echo Starting CareerAI Services (Backend + Frontend)
 echo ========================================================
 
-start "CareerAI Backend" cmd /k "cd /d %~dp0backend && venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000"
+if not exist "%~dp0backend\.venv\Scripts\python.exe" (
+  echo Backend environment missing. Run setup.ps1 first.
+  exit /b 1
+)
+start "CareerAI Backend" cmd /k "cd /d %~dp0backend && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000"
 start "CareerAI Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
 echo.

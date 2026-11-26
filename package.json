@@ -1,0 +1,23 @@
+{
+  "name": "careerai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CareerAI React frontend with a FastAPI and MongoDB backend.",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Manikanta001/CareerAi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Manikanta001/CareerAi/issues"
+  },
+  "homepage": "https://github.com/Manikanta001/CareerAi#readme",
+  "dependencies": {}
+}

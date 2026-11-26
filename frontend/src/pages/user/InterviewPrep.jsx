@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { performanceService } from '../../services/performanceService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ErrorMessage from '../../components/ErrorMessage';
-import { MessageSquareCode, CheckCircle2 } from 'lucide-react';
+import { MessageSquareCode, Search } from 'lucide-react';
 
 const InterviewPrep = () => {
   const [questions, setQuestions] = useState([]);
   const [category, setCategory] = useState('All');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -15,7 +16,7 @@ const InterviewPrep = () => {
       try {
         setLoading(true);
         const res = await performanceService.getInterviewQuestions(category);
-        setQuestions(res.data || []);
+        setQuestions(res || []);
       } catch (err) {
         setError(err.message || 'Failed to load interview questions');
       } finally {
@@ -27,6 +28,10 @@ const InterviewPrep = () => {
 
   if (loading) return <LoadingSpinner message="Loading technical & HR interview questions..." />;
   if (error) return <ErrorMessage message={error} />;
+
+  const visibleQuestions = questions.filter((question) =>
+    `${question.topic} ${question.category} ${question.question}`.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -49,8 +54,17 @@ const InterviewPrep = () => {
         </select>
       </div>
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <label htmlFor="interview-question-search" className="sr-only">Search interview questions</label>
+        <div className="relative w-full sm:max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input id="interview-question-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search questions or topics" className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15" />
+        </div>
+        <p className="text-xs text-slate-500">Showing {visibleQuestions.length} of {questions.length} questions</p>
+      </div>
+
       <div className="space-y-4">
-        {questions.map((q) => (
+        {visibleQuestions.map((q) => (
           <div key={q.id} className="glass-panel p-6 rounded-2xl space-y-3">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <span className="text-xs font-bold text-brand-400 uppercase tracking-wider">{q.topic}</span>
@@ -66,6 +80,7 @@ const InterviewPrep = () => {
             </p>
           </div>
         ))}
+        {!visibleQuestions.length && <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">{search ? 'No questions match your search in this category.' : 'No questions are available for this category yet.'}</p>}
       </div>
     </div>
   );

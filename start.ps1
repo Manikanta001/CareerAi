@@ -3,10 +3,17 @@ Write-Host "Starting CareerAI Services (Backend + Frontend)" -ForegroundColor Cy
 Write-Host "========================================================" -ForegroundColor Cyan
 
 # Start Backend
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$PSScriptRoot\backend'; & '.\venv\Scripts\python.exe' -m uvicorn app.main:app --reload --port 8000"
+$backendDir = Join-Path $PSScriptRoot 'backend'
+$frontendDir = Join-Path $PSScriptRoot 'frontend'
+$backendPython = Join-Path $backendDir '.venv\Scripts\python.exe'
+if (-not (Test-Path $backendPython)) {
+    Write-Error 'Backend environment missing. Run .\setup.ps1 first.'
+    exit 1
+}
+Start-Process powershell -ArgumentList '-NoExit', '-Command', "Set-Location -LiteralPath '$backendDir'; & '$backendPython' -m uvicorn app.main:app --reload --port 8000"
 
 # Start Frontend
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$PSScriptRoot\frontend'; npm run dev"
+Start-Process powershell -ArgumentList '-NoExit', '-Command', "Set-Location -LiteralPath '$frontendDir'; npm run dev"
 
 Write-Host ""
 Write-Host "CareerAI services launched in separate windows!" -ForegroundColor Green

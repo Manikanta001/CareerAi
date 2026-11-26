@@ -1,9 +1,12 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(BASE_DIR, ".env")
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "CareerAI"
-    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_URI: str = "mongodb://localhost:27017/"
     DATABASE_NAME: str = "careerai"
     JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
@@ -11,9 +14,11 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     UPLOAD_DIR: str = "uploads"
     OPENAI_API_KEY: str = ""
+    JUDGE0_URL: str = ""
+    JUDGE0_API_KEY: str = ""
     ENVIRONMENT: str = "development"
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=[ENV_PATH, ".env"], extra="ignore")
 
 settings = Settings()
 

@@ -12,28 +12,24 @@ def get_daily_recommendation_plan(user_id: str) -> Dict[str, Any]:
             "title": f"Study {weak_topics[0] if weak_topics else 'DBMS Normalization'}",
             "duration": "30 mins",
             "type": "Lesson",
-            "completed": False
         },
         {
             "id": 2,
             "title": f"Practice 15 Questions on {weak_topics[1] if len(weak_topics)>1 else 'Aptitude'}",
             "duration": "25 mins",
             "type": "MCQ Practice",
-            "completed": False
         },
         {
             "id": 3,
             "title": "Solve 2 DSA Coding Problems (Arrays & Hash Maps)",
             "duration": "40 mins",
             "type": "Coding",
-            "completed": False
         },
         {
             "id": 4,
             "title": "Review Incorrect Answers from Last Mock Test",
             "duration": "20 mins",
             "type": "Review",
-            "completed": True
         }
     ]
 

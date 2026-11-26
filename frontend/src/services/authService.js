@@ -26,7 +26,13 @@ export const authService = {
 
   getCurrentUserFromStorage() {
     const userStr = localStorage.getItem('careerai_user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      localStorage.removeItem('careerai_user');
+      return null;
+    }
   },
 
   async fetchMe() {

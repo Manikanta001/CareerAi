@@ -16,7 +16,7 @@ const CareerRecommendations = () => {
       try {
         setLoading(true);
         const res = await careerService.getRecommendedCareers();
-        setCareers(res.data || []);
+        setCareers(res || []);
       } catch (err) {
         setError(err.message || 'Failed to calculate career matches');
       } finally {
@@ -26,7 +26,7 @@ const CareerRecommendations = () => {
     fetchRecommended();
   }, []);
 
-  if (loading) return <LoadingSpinner message="Calculating cosine & semantic similarity scores..." />;
+  if (loading) return <LoadingSpinner message="Comparing your profile skills with career requirements..." />;
   if (error) return <ErrorMessage message={error} />;
 
   return (
@@ -35,7 +35,7 @@ const CareerRecommendations = () => {
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <Target className="h-6 w-6 text-brand-400" /> Career Match Engine
         </h1>
-        <p className="text-xs text-slate-400">AI semantic embedding match based on candidate technical skill set</p>
+        <p className="text-xs text-slate-400">Estimated overlap between the skills in your profile and each role’s listed requirements.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,7 +45,7 @@ const CareerRecommendations = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">{c.title}</h3>
                 <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 font-extrabold text-sm">
-                  {c.match_percentage || 85}% Match
+                  {c.match_percentage == null ? 'Not assessed' : `${c.match_percentage}% Match`}
                 </span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">{c.description}</p>

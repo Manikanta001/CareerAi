@@ -1,0 +1,81 @@
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage[margin=0.58in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{leftmargin=1.2em, itemsep=1pt, topsep=2pt, parsep=0pt}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{7pt}{4pt}
+
+\newcommand{\entry}[2]{\textbf{#1}\hfill #2\par}
+\newcommand{\project}[3]{\textbf{#1} \textbar\ \textit{#2}\hfill #3\par}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries Mukkera Manikanta}\\[3pt]
+    +91 96185 94803 \textbar\
+    \href{mailto:mukkeramanikanta85@gmail.com}{mukkeramanikanta85@gmail.com} \textbar\
+    \href{https://linkedin.com/in/mani9618}{linkedin.com/in/mani9618} \textbar\
+    \href{https://github.com/Manikanta001}{github.com/Manikanta001}
+\end{center}
+
+\section{Summary}
+Entry-level Full-Stack Developer with hands-on experience building web applications and REST APIs using JavaScript, React.js, Node.js, Express.js, MongoDB, and Java. Developed projects involving authentication, CRUD workflows, database optimization, and distributed request rate limiting. Seeking a software engineering role where I can contribute to reliable, user-focused applications.
+
+\section{Education}
+\entry{SR University}{Hanamkonda, Telangana}
+Bachelor of Technology in Computer Science and Engineering \hfill 2024--Present\\
+CGPA: 8.02/10\\
+Relevant Coursework: Data Structures and Algorithms, Operating Systems, Database Management Systems, Computer Networks, Object-Oriented Programming, Software Engineering
+
+\section{Technical Skills}
+\textbf{Languages:} Java, JavaScript (ES6+), C, SQL\\
+\textbf{Frontend:} HTML5, CSS3, React.js, Bootstrap, Next.js, Responsive Design\\
+\textbf{Backend:} Node.js, Express.js, Spring Boot, REST APIs, Microservices\\
+\textbf{Databases and Caching:} MongoDB, MySQL, PostgreSQL, Firebase, Redis\\
+\textbf{Tools:} Git, GitHub, Docker, Postman, Maven, Linux\\
+\textbf{Concepts:} Data Structures and Algorithms, Object-Oriented Programming, System Design, JWT Authentication, CRUD Operations
+
+\section{Experience}
+\entry{Frontend Developer | Heera E Vehicles}{Jun 2025 -- Aug 2025}
+\textit{Remote} \textbar\ \href{https://heeraevehicles.in}{heeraevehicles.in}
+\begin{itemize}
+    \item Built responsive interfaces for an electric vehicle management platform using React.js, JavaScript, HTML5, CSS3, and Bootstrap.
+    \item Integrated REST APIs with frontend components and implemented JWT-based authentication flows.
+    \item Resolved UI bugs and state-management issues with backend developers; contributed to production-ready features and client-side performance improvements. Add a verified result or measurement if available: [specific improvement].
+\end{itemize}
+
+\section{Projects}
+\project{Distributed Rate Limiter}{Java, Spring Boot, Redis, Docker, REST APIs}{2026}
+\begin{itemize}
+    \item Built a distributed rate-limiting service to control API traffic across application instances using Java, Spring Boot, and Redis.
+    \item Implemented token bucket, fixed-window, and sliding-window algorithms with Redis atomic operations to support thread-safe request throttling.
+    \item Added REST APIs for client management and configurable rate-limit rules; containerized the service with Docker.
+    \item Load-tested endpoints with Apache JMeter. Add the tested throughput, latency, or request volume only if you have verified results: [result].
+\end{itemize}
+
+\project{LearnX -- Full-Stack Learning Platform}{React.js, Node.js, Express.js, Firebase}{2026 \textbar\ \href{https://github.com/Manikanta001}{GitHub}}
+\begin{itemize}
+    \item Developed a learning management platform for online course delivery using React.js, Node.js, Express.js, and Firebase.
+    \item Implemented role-based authentication, course management, assignment submission, quiz evaluation, and progress tracking.
+    \item Built an admin dashboard for managing users and learning materials, with REST APIs for user and course content workflows.
+\end{itemize}
+
+\project{Payroll Management System}{React.js, Node.js, Express.js, MongoDB}{2025 \textbar\ \href{https://github.com/Manikanta001}{GitHub}}
+\begin{itemize}
+    \item Built a payroll application with employee administration, attendance tracking, salary calculation, and payslip generation.
+    \item Implemented authenticated REST APIs and CRUD operations using Node.js, Express.js, and MongoDB.
+    \item Optimized MongoDB indexes and aggregation queries for payroll calculations; add a verified performance result if available: [specific result].
+\end{itemize}
+
+\end{document}

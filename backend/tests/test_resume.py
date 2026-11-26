@@ -21,3 +21,17 @@ def test_resume_scorer():
     score_data = calculate_resume_score(sample_text, sections, skills)
     assert "overall_score" in score_data
     assert score_data["overall_score"] > 0
+
+
+def test_resume_scorer_can_reach_100_for_complete_resume():
+    sample_text = ("John Doe john@example.com +91 9876543210\n" + "A " * 300)
+    sections = {
+        "contact": True,
+        "education": ["B.Tech"],
+        "projects": ["CareerAI project"],
+        "experience": ["Software internship"],
+        "certifications": ["Cloud certification"],
+    }
+    skills = ["Python", "FastAPI", "React", "SQL", "MongoDB", "Git", "Docker", "DSA", "Java", "AWS"]
+    score_data = calculate_resume_score(sample_text, sections, skills)
+    assert score_data["overall_score"] == 100

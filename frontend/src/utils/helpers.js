@@ -9,3 +9,12 @@ export const getScoreBadgeColor = (score) => {
   if (score >= 60) return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
   return 'text-rose-400 border-rose-500/30 bg-rose-500/10';
 };
+
+export const getSafeExternalUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
+  } catch {
+    return null;
+  }
+};

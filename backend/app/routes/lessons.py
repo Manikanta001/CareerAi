@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongodb import get_database
 from app.utils.helpers import success_response
+from app.routes.topics import SUBJECT_TOPICS, _subject_name
 
 router = APIRouter(prefix="/lessons", tags=["Learning System"])
 
 @router.get("/{lesson_id}")
-def get_lesson_by_id(lesson_id: str):
+def get_lesson_by_id(lesson_id: str, topic_id: str | None = None, topic_title: str | None = None):
     db = get_database()
+    topic_doc = None
     if db is not None:
         try:
             from bson import ObjectId
@@ -18,32 +20,52 @@ def get_lesson_by_id(lesson_id: str):
         except Exception:
             pass
 
-    # Fallback lesson payload
-    mock_lesson = {
+        try:
+            from bson import ObjectId
+            if topic_id and ObjectId.is_valid(topic_id):
+                topic_doc = db.topics.find_one({"_id": ObjectId(topic_id)})
+        except Exception:
+            topic_doc = None
+
+    resolved_topic = (topic_doc or {}).get("title") or topic_title
+    subject_id = (topic_doc or {}).get("subject_id")
+    if not resolved_topic and topic_id and topic_id.startswith("topic-"):
+        subject_part, _, topic_index = topic_id[len("topic-"):].rpartition("-")
+        if topic_index.isdigit():
+            subject_id = subject_part
+            subject_title = _subject_name(db, subject_id)
+            topic_list = SUBJECT_TOPICS.get(subject_title.lower(), [])
+            index = int(topic_index) - 1
+            if 0 <= index < len(topic_list):
+                resolved_topic = topic_list[index]
+
+    topic_name = resolved_topic or "the selected placement topic"
+    subject_title = _subject_name(db, subject_id) if subject_id else "Placement Learning Center"
+
+    # Starter outline for topics without a published lesson.
+    starter_lesson = {
         "id": lesson_id,
-        "title": "SQL Normalization (1NF, 2NF, 3NF, BCNF)",
-        "subject": "DBMS",
-        "topic": "Normalization",
+        "is_sample": True,
+        "title": topic_name,
+        "subject": subject_title,
+        "topic": topic_name,
         "difficulty": "Medium",
         "estimated_learning_time": "25 mins",
-        "explanation": "Normalization is the process of organizing database tables to reduce data redundancy and eliminate update/deletion anomalies.",
+        "explanation": f"This is a starter outline for {topic_name}. Define the key terms, identify the main rules or components, work through a topic-specific example, and test an edge case before moving to practice questions.",
         "key_concepts": [
-            "1NF: Atomic values in columns, no repeating groups.",
-            "2NF: In 1NF and no partial dependencies on candidate keys.",
-            "3NF: In 2NF and no transitive dependencies.",
-            "BCNF: Strict version of 3NF where for X -> Y, X must be a super key."
+            f"Write a one-sentence definition of {topic_name} in your own words.",
+            "List its key terms, rules, or components and explain how they relate.",
+            "Check the conditions and edge cases before applying a rule."
         ],
         "examples": [
-            "Decomposing Student_Course table into Student table and Course table with StudentID foreign key."
+            f"Choose a small example involving {topic_name}, show each reasoning step, and verify the result."
         ],
-        "formulas": [
-            "Functional Dependency: X -> Y means X uniquely determines Y."
-        ],
+        "formulas": [],
         "common_mistakes": [
-            "Confusing partial dependency (part of composite key) with transitive dependency (non-key attribute)."
+            "Memorizing a rule without checking when it applies."
         ],
         "practice_questions": [
-            "If R(A,B,C,D) has AB -> C and C -> D, what is the highest normal form?"
+            f"Explain {topic_name} to a classmate, then apply it to a new example and check one edge case."
         ]
     }
-    return success_response(mock_lesson, "Lesson details retrieved")
+    return success_response(starter_lesson, "Starter lesson outline retrieved")

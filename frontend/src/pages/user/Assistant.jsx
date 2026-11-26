@@ -2,11 +2,18 @@ import React, { useState } from 'react';
 import { performanceService } from '../../services/performanceService';
 import { Bot, Send, User, Sparkles } from 'lucide-react';
 
+const QUICK_PROMPTS = [
+  'Make me a study plan for campus placements',
+  'Explain a DSA problem step by step',
+  'Explain DBMS joins with an example',
+  'Quiz me on aptitude, OS, or computer networks',
+];
+
 const Assistant = () => {
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
-      text: 'Hello! I am your CareerAI placement mentor. How can I help you prepare for technical interviews, improve your resume score, or close your skill gaps today?'
+      text: 'Hi! I’m CareerAI. Ask me about DSA, aptitude, logical reasoning, verbal ability, programming, OOP, DBMS, SQL, operating systems, networks, software engineering, interviews, resumes, or placement plans.'
     }
   ]);
   const [input, setInput] = useState('');
@@ -23,13 +30,18 @@ const Assistant = () => {
 
     try {
       const res = await performanceService.askAssistant(userMsg);
-      const reply = res.data?.reply || 'I am ready to assist with your placement preparation goals!';
+      const reply = res?.reply;
+      if (!reply) throw new Error('The assistant returned an empty response.');
       setMessages(prev => [...prev, { sender: 'assistant', text: reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { sender: 'assistant', text: 'I am currently operating in offline mode. Please try asking about resume scores or DSA practice!' }]);
+      setMessages(prev => [...prev, { sender: 'assistant', text: `I couldn't get a response. ${err.message || 'Please try again.'}` }]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const useQuickPrompt = (prompt) => {
+    setInput(prompt);
   };
 
   return (
@@ -41,9 +53,27 @@ const Assistant = () => {
         <p className="text-xs text-slate-400">Interactive mentor for placement guidance, resume tips, and interview coaching</p>
       </div>
 
-      <div className="glass-panel h-[500px] rounded-3xl p-6 flex flex-col justify-between border border-slate-800">
+      <p role="note" className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs leading-5 text-slate-400">
+        When an OpenAI API key is configured, your message and selected profile, resume, and assessment details are sent to OpenAI to prepare a reply. Without a key, CareerAI uses built-in guidance.
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        {QUICK_PROMPTS.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            onClick={() => useQuickPrompt(prompt)}
+            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500/50 text-slate-300 text-xs transition-colors"
+          >
+            <Sparkles className="h-3.5 w-3.5 inline mr-1.5 text-brand-400" />
+            {prompt}
+          </button>
+        ))}
+      </div>
+
+      <div className="glass-panel flex h-[min(70vh,600px)] min-h-[400px] flex-col justify-between rounded-3xl border border-slate-800 p-4 sm:p-6">
         {/* Messages scroll area */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2" aria-live="polite" aria-label="Conversation">
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -78,11 +108,12 @@ const Assistant = () => {
 
         {/* Input Form */}
         <form onSubmit={handleSend} className="pt-4 border-t border-slate-800 flex gap-2">
-          <input
+          <label className="sr-only" htmlFor="assistant-message">Your message</label><input
+            id="assistant-message"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about resume tips, DSA roadmap, SQL Joins..."
+            placeholder="Ask about placements, resume, DSA, MCQs, jobs, or interviews..."
             className="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-brand-500"
           />
           <button

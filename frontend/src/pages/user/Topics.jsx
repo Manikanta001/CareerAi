@@ -16,7 +16,7 @@ const Topics = () => {
       try {
         setLoading(true);
         const res = await questionService.getSubjectTopics(subjectId || 'sub1');
-        setTopics(res.data || []);
+        setTopics(res || []);
       } catch (err) {
         setError(err.message || 'Failed to load topics');
       } finally {

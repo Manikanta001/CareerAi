@@ -22,7 +22,7 @@ const Timer = ({ initialSeconds, onExpire }) => {
   const isUrgent = secondsLeft < 300; // less than 5 mins
 
   return (
-    <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-sm font-mono font-bold transition-all ${
+    <div role="timer" aria-label={`${mins} minutes ${secs} seconds remaining`} aria-live="off" className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-sm font-mono font-bold transition-all ${
       isUrgent 
         ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse' 
         : 'bg-slate-800 text-slate-200 border-slate-700'

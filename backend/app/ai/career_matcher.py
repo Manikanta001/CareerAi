@@ -2,9 +2,9 @@ from typing import List, Dict, Any
 
 # Lightweight skill-overlap scoring keeps recommendations available without
 # downloading a machine-learning model during setup.
-def calculate_match_score(user_skills: List[str], career_req_skills: List[str], career_pref_skills: List[str] = None) -> float:
-    if not career_req_skills:
-        return 50.0
+def calculate_match_score(user_skills: List[str], career_req_skills: List[str], career_pref_skills: List[str] = None) -> float | None:
+    if not career_req_skills or not user_skills:
+        return None
 
     user_skills_set = set(s.lower() for s in user_skills)
     req_set = set(s.lower() for s in career_req_skills)
@@ -14,10 +14,10 @@ def calculate_match_score(user_skills: List[str], career_req_skills: List[str], 
     matched_pref = user_skills_set.intersection(pref_set)
 
     req_score = (len(matched_req) / len(req_set)) * 80.0 if req_set else 0
-    pref_score = (len(matched_pref) / len(pref_set)) * 20.0 if pref_set else 20.0 if not pref_set else 0
+    pref_score = (len(matched_pref) / len(pref_set)) * 20.0 if pref_set else 0
 
     score = req_score + pref_score
-    return round(min(98.0, max(25.0, score)), 1)
+    return round(min(98.0, score), 1)
 
 def match_careers_for_user(user_skills: List[str], careers_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     results = []
@@ -29,5 +29,5 @@ def match_careers_for_user(user_skills: List[str], careers_list: List[Dict[str, 
         results.append(career_copy)
 
     # Sort descending by match percentage
-    results.sort(key=lambda x: x.get("match_percentage", 0), reverse=True)
+    results.sort(key=lambda x: x.get("match_percentage") or 0, reverse=True)
     return results

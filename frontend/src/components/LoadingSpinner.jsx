@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 
 const LoadingSpinner = ({ fullScreen = false, message = 'Loading CareerAI platform...' }) => {
   const content = (
-    <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
+    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center p-8 text-center space-y-3">
       <Loader2 className="h-8 w-8 text-brand-500 animate-spin" />
       <p className="text-sm font-medium text-slate-400">{message}</p>
     </div>

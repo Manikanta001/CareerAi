@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, onboardingRequired } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -17,6 +17,10 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (adminOnly && user.role !== 'ADMIN') {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (!adminOnly && onboardingRequired && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace state={{ from: location }} />;
   }
 
   return children;

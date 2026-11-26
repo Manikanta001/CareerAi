@@ -59,7 +59,7 @@ def get_all_careers() -> List[dict]:
 
 def get_recommended_careers_for_user(user_id: str) -> List[dict]:
     db = get_database()
-    user_skills = ["C", "C++", "Java", "Python", "SQL", "Git"]
+    user_skills = []
     
     if db is not None:
         profile = db.profiles.find_one({"user_id": user_id})
@@ -71,7 +71,7 @@ def get_recommended_careers_for_user(user_id: str) -> List[dict]:
 
 def get_skill_gap_for_user(user_id: str, career_title: str = None) -> dict:
     db = get_database()
-    user_skills = ["C", "C++", "Java", "Python", "SQL", "Git"]
+    user_skills = []
     target_career_title = career_title or "Software Developer"
     
     if db is not None:
@@ -83,7 +83,10 @@ def get_skill_gap_for_user(user_id: str, career_title: str = None) -> dict:
                 target_career_title = profile.get("preferred_career")
 
     all_careers = get_all_careers()
-    target_career = next((c for c in all_careers if c.get("title").lower() == target_career_title.lower()), all_careers[0])
+    target_career = next((c for c in all_careers if c.get("title", "").lower() == target_career_title.lower()), None)
+    if target_career is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Career role not found: {target_career_title}")
     
     required_skills = target_career.get("required_skills", ["Java", "Python", "SQL", "DSA", "Docker"])
     return analyze_skill_gap(user_skills, required_skills, target_career.get("title"))

@@ -23,7 +23,15 @@ api.interceptors.request.use(
 
 // Response Interceptor: Handle 401 unauth
 api.interceptors.response.use(
-  (response) => response.data,
+  // Keep Axios's response shape while removing the backend's `{success,
+  // message, data}` envelope so all services consistently consume `data`.
+  (response) => {
+    const payload = response.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return { ...response, data: payload.data };
+    }
+    return response;
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('careerai_token');
@@ -32,7 +40,12 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'API Request Failed';
+    const detail = error.response?.data?.detail || error.response?.data?.message;
+    const errorMsg = Array.isArray(detail)
+      ? detail.map((item) => item?.msg || String(item)).join('; ')
+      : typeof detail === 'string'
+        ? detail
+        : error.message || 'API request failed';
     return Promise.reject(new Error(errorMsg));
   }
 );

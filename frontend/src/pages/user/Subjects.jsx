@@ -16,7 +16,7 @@ const Subjects = () => {
       try {
         setLoading(true);
         const res = await questionService.getSubjects();
-        setSubjects(res.data || []);
+        setSubjects(res || []);
       } catch (err) {
         setError(err.message || 'Failed to load placement subjects');
       } finally {
@@ -46,14 +46,20 @@ const Subjects = () => {
                 <span className="text-[10px] uppercase font-bold text-brand-400 bg-brand-500/10 px-2.5 py-0.5 rounded border border-brand-500/20">
                   {sub.category || 'General'}
                 </span>
-                <span className="text-xs text-slate-400 font-medium">{sub.topics_count || 10} Topics</span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {sub.topics_count == null ? 'Topics not loaded' : `${sub.topics_count} Topics`}
+                </span>
               </div>
 
               <h3 className="text-lg font-bold text-white">{sub.name}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">{sub.description}</p>
 
               <div className="pt-2">
-                <ProgressBar value={sub.progress_percentage || 65} label="Subject Mastery" color="brand" />
+                {sub.progress_percentage == null ? (
+                  <p className="text-xs text-slate-500">No subject progress recorded yet</p>
+                ) : (
+                  <ProgressBar value={sub.progress_percentage} label="Subject Mastery" color="brand" />
+                )}
               </div>
             </div>
 

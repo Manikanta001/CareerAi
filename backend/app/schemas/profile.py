@@ -18,6 +18,15 @@ class ProfileUpdate(BaseModel):
     preferred_career: Optional[str] = "Software Developer"
     preferred_job_type: Optional[str] = "Full Time"
     preferred_location: Optional[str] = "Remote / Flexible"
+    education_level: Optional[str] = ""
+    specialization: Optional[str] = ""
+    current_year: Optional[str] = ""
+    programming_languages: List[str] = Field(default_factory=list)
+    career_interests: List[str] = Field(default_factory=list)
+    target_job_role: Optional[str] = ""
+    experience_level: Optional[str] = ""
+    learning_goals: List[str] = Field(default_factory=list)
+    profile_picture: Optional[str] = ""
 
 class ProfileResponse(ProfileUpdate):
     user_id: str

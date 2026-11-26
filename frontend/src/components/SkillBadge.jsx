@@ -22,7 +22,7 @@ const SkillBadge = ({ skill, status = 'default', onRemove }) => {
       {statusIcons[status]}
       <span>{skill}</span>
       {onRemove && (
-        <button onClick={onRemove} className="ml-1 text-slate-400 hover:text-white">
+        <button type="button" onClick={onRemove} aria-label={`Remove ${skill}`} className="ml-1 text-slate-400 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
           ×
         </button>
       )}

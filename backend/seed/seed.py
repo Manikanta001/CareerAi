@@ -28,9 +28,10 @@ def seed_database():
     admin_pass = hash_password(admin_password)
     user_pass = hash_password(demo_password)
 
+    admin_email = os.getenv("SEED_ADMIN_EMAIL", "admin@gmail.com").strip().lower()
     admin_user = {
         "name": "System Administrator",
-        "email": "admin@careerai.com",
+        "email": admin_email,
         "password": admin_pass,
         "role": "ADMIN",
         "created_at": datetime.now(timezone.utc)
@@ -244,6 +245,7 @@ def seed_database():
     logger.info("Seeding Sample Jobs...")
     jobs = [
         {
+            "is_sample": True,
             "title": "Graduate Software Engineer 2026",
             "company": "TechCorp Solutions",
             "location": "Bengaluru / Hyderabad (Hybrid)",
@@ -254,10 +256,11 @@ def seed_database():
             "description": "Building next-generation microservices and web APIs for enterprise cloud clients.",
             "responsibilities": ["Develop clean backend APIs", "Participate in code reviews", "Write unit tests"],
             "eligibility": "B.Tech/B.E 2025/2026 graduates with 60%+ throughout",
-            "application_url": "https://example.com/jobs/1",
+            "application_url": "",
             "posted_date": "2 days ago"
         },
         {
+            "is_sample": True,
             "title": "Junior Python & Backend Developer",
             "company": "InnovateAI Labs",
             "location": "Remote (India)",
@@ -268,10 +271,11 @@ def seed_database():
             "description": "Design and implement scalable Python FastAPI services connected to MongoDB.",
             "responsibilities": ["Build REST endpoints", "Optimize database queries", "Integrate AI services"],
             "eligibility": "B.Tech CS/IT with strong Python fundamentals",
-            "application_url": "https://example.com/jobs/2",
+            "application_url": "",
             "posted_date": "1 day ago"
         },
         {
+            "is_sample": True,
             "title": "Frontend React Developer Intern",
             "company": "NextGen Web Systems",
             "location": "Pune / Remote",
@@ -282,7 +286,7 @@ def seed_database():
             "description": "Construct intuitive user interfaces and dashboards using React and Tailwind CSS.",
             "responsibilities": ["Translate Figma designs to React", "Ensure responsive mobile UI"],
             "eligibility": "Passionate frontend developer graduating 2025-2026",
-            "application_url": "https://example.com/jobs/3",
+            "application_url": "",
             "posted_date": "3 days ago"
         }
     ]

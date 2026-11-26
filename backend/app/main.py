@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database.mongodb import connect_to_mongo, close_mongo_connection
 from app.database.indexes import create_db_indexes
+from app.services.admin_bootstrap import ensure_admin_account
 from app.middleware.error_handler import custom_exception_handler
 
 # Import Routers
@@ -14,7 +15,7 @@ from app.routes import (
     auth, profile, resume, careers, skills, jobs,
     subjects, topics, lessons, questions, tests,
     performance, recommendations, coding, interview,
-    assistant, admin
+    assistant, admin, company_prep
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing CareerAI Backend Application...")
     connect_to_mongo()
     create_db_indexes()
+    ensure_admin_account()
     yield
     logger.info("Shutting down CareerAI Backend Application...")
     close_mongo_connection()
@@ -65,8 +67,10 @@ app.include_router(performance.router, prefix=api_prefix)
 app.include_router(recommendations.router, prefix=api_prefix)
 app.include_router(coding.router, prefix=api_prefix)
 app.include_router(interview.router, prefix=api_prefix)
+app.include_router(company_prep.router, prefix=api_prefix)
 app.include_router(assistant.router, prefix=api_prefix)
 app.include_router(admin.router, prefix=api_prefix)
+app.include_router(admin.updates_router, prefix=api_prefix)
 
 @app.get("/")
 def root():

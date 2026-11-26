@@ -6,6 +6,9 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUserFromStorage());
   const [token, setToken] = useState(localStorage.getItem('careerai_token'));
+  const [onboardingRequired, setOnboardingRequired] = useState(
+    localStorage.getItem('careerai_onboarding_required') === 'true'
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +33,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await authService.login(email, password);
+    localStorage.removeItem('careerai_onboarding_required');
+    setOnboardingRequired(false);
     setUser(res.user);
     setToken(res.access_token);
     return res;
@@ -37,6 +42,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     const res = await authService.register(name, email, password);
+    localStorage.setItem('careerai_onboarding_required', 'true');
+    setOnboardingRequired(true);
     setUser(res.user);
     setToken(res.access_token);
     return res;
@@ -44,12 +51,19 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     authService.logout();
+    localStorage.removeItem('careerai_onboarding_required');
     setUser(null);
     setToken(null);
+    setOnboardingRequired(false);
+  };
+
+  const completeOnboarding = () => {
+    localStorage.removeItem('careerai_onboarding_required');
+    setOnboardingRequired(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, onboardingRequired, login, register, logout, completeOnboarding, setUser }}>
       {children}
     </AuthContext.Provider>
   );

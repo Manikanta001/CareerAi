@@ -7,6 +7,7 @@ import { ShieldCheck, User, Target, Briefcase, ListOrdered } from 'lucide-react'
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
+  const [metrics, setMetrics] = useState({ careers: 0, jobs: 0, questions: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -14,8 +15,12 @@ const AdminDashboard = () => {
     const fetchAdminData = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/admin/users');
-        setUsers(res.data || []);
+        const [usersRes, metricsRes] = await Promise.all([
+          api.get('/admin/users'),
+          api.get('/admin/metrics'),
+        ]);
+        setUsers(usersRes.data || []);
+        setMetrics(metricsRes.data || { careers: 0, jobs: 0, questions: 0 });
       } catch (err) {
         setError(err.message || 'Failed to load admin metrics');
       } finally {
@@ -31,16 +36,18 @@ const AdminDashboard = () => {
     <div className="space-y-8 max-w-6xl mx-auto">
       <div className="border-b border-slate-800 pb-4">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6 text-amber-400" /> Admin Control Dashboard
+          <ShieldCheck className="h-6 w-6 text-amber-400" /> Admin Overview
         </h1>
-        <p className="text-xs text-slate-400">System management, user control, question bank, and job postings</p>
+        <p className="text-xs text-slate-400">A quick view of CareerAI users, learning content, and company resources.</p>
       </div>
 
+      {error && <ErrorMessage message={error} />}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard title="Total Registered Users" value={users.length || 2} subtitle="Student accounts" icon={User} color="amber" />
-        <StatCard title="Active Careers" value={5} subtitle="Career profiles" icon={Target} color="brand" />
-        <StatCard title="Job Postings" value={3} subtitle="Active placements" icon={Briefcase} color="emerald" />
-        <StatCard title="Question Bank" value="100+" subtitle="MCQs across subjects" icon={ListOrdered} color="indigo" />
+        <StatCard title="Total Registered Users" value={users.length} subtitle="Student accounts" icon={User} color="amber" />
+        <StatCard title="Active Careers" value={metrics.careers} subtitle="Career profiles" icon={Target} color="brand" />
+        <StatCard title="Job Listings" value={metrics.jobs} subtitle="Saved role records" icon={Briefcase} color="emerald" />
+        <StatCard title="Question Bank" value={metrics.questions} subtitle="MCQs across subjects" icon={ListOrdered} color="indigo" />
       </div>
 
       <div className="glass-panel p-6 rounded-3xl space-y-4">
@@ -59,6 +66,7 @@ const AdminDashboard = () => {
               </span>
             </div>
           ))}
+          {!users.length && !error && <p className="rounded-xl border border-dashed border-slate-700 p-5 text-center text-sm text-slate-400">No user accounts found.</p>}
         </div>
       </div>
     </div>

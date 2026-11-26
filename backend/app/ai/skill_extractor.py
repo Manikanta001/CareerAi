@@ -19,7 +19,8 @@ SKILL_TAXONOMY = [
     # Testing & Tools
     "Manual Testing", "Selenium", "Automation Testing", "Postman", "Jira", "JUnit",
     # Core Concepts
-    "OOP", "DSA", "REST API", "Microservices", "DBMS", "Operating Systems", "Computer Networks"
+    "OOP", "Object-Oriented Programming", "DSA", "Data Structures and Algorithms",
+    "REST API", "REST API Design", "Microservices", "DBMS", "Operating Systems", "Computer Networks"
 ]
 
 def extract_skills_from_text(raw_text: str) -> List[str]:

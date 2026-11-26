@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, User, LogOut, ShieldCheck, Bell } from 'lucide-react';
+import { User, LogOut, ShieldCheck } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -13,19 +14,15 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3 flex items-center justify-between">
+    <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 py-3 flex items-center justify-between shadow-sm shadow-slate-200/60">
       <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5">
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-brand-500/20 flex items-center justify-center">
-          <div className="h-full w-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-brand-500" />
-          </div>
-        </div>
+        <BrandMark />
         <div>
-          <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-brand-500 bg-clip-text text-transparent">
-            Career<span className="text-brand-500">AI</span>
+          <span className="text-xl font-extrabold tracking-tight text-slate-900">
+            Career<span className="text-blue-600">AI</span>
           </span>
-          <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest text-slate-400 ml-2 px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">
-            PRO PLATFORM
+          <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest text-slate-500 ml-2 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-100">
+            CAREER GROWTH
           </span>
         </div>
       </Link>
@@ -49,7 +46,9 @@ const Navbar = () => {
               <button 
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                title="Logout"
+                type="button"
+                aria-label="Sign out"
+                title="Sign out"
               >
                 <LogOut className="h-4 w-4" />
               </button>

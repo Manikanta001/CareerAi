@@ -4,50 +4,62 @@ from bson import ObjectId
 from fastapi import HTTPException
 from app.database.mongodb import get_database
 from app.schemas.test import TestSubmissionSchema
+from app.data.mock_content import MOCK_CORRECT_ANSWERS
+from app.data.company_patterns import COMPANY_QUESTION_ANSWERS, get_company_mock_tests
+
+SCORABLE_MOCK_ANSWERS = {**MOCK_CORRECT_ANSWERS, **COMPANY_QUESTION_ANSWERS}
 
 def get_all_tests() -> List[dict]:
     db = get_database()
+    company_tests = get_company_mock_tests()
     if db is not None:
         tests = list(db.mock_tests.find({}))
         for t in tests:
             t["id"] = str(t["_id"])
             del t["_id"]
         if tests:
-            return tests
+            known_ids = {test["id"] for test in tests}
+            return tests + [test for test in company_tests if test["id"] not in known_ids]
 
     # Seeded tests fallback
     return [
         {
             "id": "t1",
-            "title": "Comprehensive Placement Mock Test - Set 1",
-            "duration_minutes": 60,
-            "total_questions": 50,
+            "title": "CareerAI Core Skills Mock Test",
+            "duration_minutes": 30,
+            "total_questions": 20,
             "negative_marking": 0.25,
             "sections": [
-                {"name": "Quantitative Aptitude", "count": 15},
-                {"name": "Logical Reasoning", "count": 10},
-                {"name": "Verbal Ability", "count": 10},
-                {"name": "Programming & DSA", "count": 10},
-                {"name": "DBMS & OS", "count": 5}
+                {"name": "Java", "count": 3},
+                {"name": "Python", "count": 3},
+                {"name": "Data Structures", "count": 3},
+                {"name": "DBMS", "count": 3},
+                {"name": "Operating Systems", "count": 2},
+                {"name": "Computer Networks", "count": 2},
+                {"name": "Aptitude", "count": 4},
             ]
         },
         {
             "id": "t2",
-            "title": "Core Computer Science Placement Test",
-            "duration_minutes": 45,
-            "total_questions": 30,
+            "title": "CareerAI Aptitude & Communication Mock Test",
+            "duration_minutes": 20,
+            "total_questions": 10,
             "negative_marking": 0.25,
             "sections": [
-                {"name": "Programming & DSA", "count": 10},
-                {"name": "DBMS", "count": 10},
-                {"name": "Operating Systems & Networks", "count": 10}
+                {"name": "Quantitative Aptitude", "count": 2},
+                {"name": "Logical Reasoning", "count": 2},
+                {"name": "Verbal Ability", "count": 2},
+                {"name": "Computer Networks", "count": 2},
+                {"name": "Data Structures", "count": 2},
             ]
         }
-    ]
+    ] + company_tests
 
 def evaluate_test_submission(user_id: str, submission: TestSubmissionSchema) -> dict:
     db = get_database()
     answers = submission.answers  # dict of q_id -> selected_option index
+    selected_test = next((test for test in get_all_tests() if test.get("id") == submission.test_id), {})
+    negative_marking = selected_test.get("negative_marking", 0.25)
     
     questions = []
     if db is not None:
@@ -59,19 +71,18 @@ def evaluate_test_submission(user_id: str, submission: TestSubmissionSchema) -> 
     if not questions:
         # Keep demo-question scoring aligned with the sample questions returned by
         # the questions endpoint. Never infer correctness from the chosen index.
-        mock_correct_answers = {"q1": 1, "q2": 1, "q3": 0, "q4": 1, "q5": 1}
-        if not answers or any(qid not in mock_correct_answers for qid in answers):
+        if not answers or any(qid not in SCORABLE_MOCK_ANSWERS for qid in answers):
             raise HTTPException(status_code=400, detail="No scorable questions were submitted")
         score, correct, wrong, skipped = 0, 0, 0, 0
         for q_id, opt in answers.items():
-            if opt == mock_correct_answers[q_id]:
+            if opt == SCORABLE_MOCK_ANSWERS[q_id]:
                 correct += 1
                 score += 1
             elif opt == -1 or opt is None:
                 skipped += 1
             else:
                 wrong += 1
-                score -= 0.25
+                score -= negative_marking
 
         total_q = len(answers) or 1
         accuracy = round((correct / max(1, (correct + wrong))) * 100, 1)
@@ -123,7 +134,7 @@ def evaluate_test_submission(user_id: str, submission: TestSubmissionSchema) -> 
             topic_correct[top] = topic_correct.get(top, 0) + 1
         else:
             wrong += 1
-            score -= 0.25
+            score -= negative_marking
 
     total_q = len(questions)
     accuracy = round((correct / max(1, (correct + wrong))) * 100, 1)

@@ -19,7 +19,7 @@ const SkillGap = () => {
       try {
         setLoading(true);
         const res = await careerService.getSkillGaps(targetFromUrl || 'Software Developer');
-        setGapData(res.data);
+        setGapData(res);
       } catch (err) {
         setError(err.message || 'Failed to load skill gap matrix');
       } finally {
