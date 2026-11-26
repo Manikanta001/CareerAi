@@ -66,6 +66,18 @@ To create or reset only the administrator account without changing practice cont
 
 For the frontend, `VITE_API_BASE_URL` defaults to `/api`, which works behind the included Nginx proxy. When hosting the frontend separately, set it to the public API base URL at build time and set `FRONTEND_URL` on the backend to the frontend's exact origin.
 
+## Deploy the frontend to Vercel
+
+The repository includes [`vercel.json`](vercel.json) for deploying the Vite frontend from the repository root. The FastAPI backend must be deployed separately to a Python-capable host; Vercel should not use the local `http://localhost:8000` URL.
+
+1. Import this repository into Vercel and keep the project root at the repository root.
+2. Add the Vercel environment variable `VITE_API_BASE_URL`, set to the public backend URL, for example `https://api.example.com/api`.
+3. On the backend host, set `FRONTEND_URL` to the exact Vercel origin, such as `https://careerai.vercel.app`.
+4. Set production `MONGODB_URI`, `DATABASE_NAME`, and a random `JWT_SECRET` of at least 32 characters on the backend host.
+5. Redeploy the Vercel project after setting `VITE_API_BASE_URL`; Vite injects this value during the build.
+
+The Vercel rewrite handles client-side routes such as `/login` and `/register`. API requests go directly to the configured backend URL, avoiding the browser `Network Error` caused by a deployed frontend trying to call localhost.
+
 ## Project layout
 
 - `frontend/src`: pages, components, routing, and API clients
